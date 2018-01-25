@@ -128,7 +128,7 @@ public class Elevator {
                 setDoorOpened(false);
             }
 
-            // если лифт стоит с закрытой дверью и задач больше нет - освобождаем поток
+            // если лифт стоит с закрытой дверью и задач больше нет - завершаем цикл
             if (direction == MovementDirection.IDLE && !isDoorOpened() && floorsQueue.isEmpty()) {
                 break;
             }
@@ -158,12 +158,12 @@ public class Elevator {
         if (floor > building.getFloors() || floor < 1) {
             throw new IllegalArgumentException("Building has only " + building.getFloors() + " floors");
         }
-
+        // расшариваемый ресурс между запросами пользователя - очередь задач
         synchronized (floorsQueue) {
             floorsQueue.add(floor);
         }
 
-        if (Objects.isNull(task) || task.isAlive()) {
+        if (Objects.isNull(task) || !task.isAlive()) {
 
             task = new Thread(this::runTask);
             task.setDaemon(true);
