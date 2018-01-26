@@ -76,9 +76,9 @@ public class Elevator {
         LocalTime timer = LocalTime.now();
         int destination = -1;
 
-        for (; ; ) {
-            // если что-то есть в очереди задач попробуем проверить надо ли менять текущий целевой этаж
-            if (!floorsQueue.isEmpty()) {
+        for (; ;) {
+            // если что-то есть в очереди задач и двеверь закрыта попробуем проверить надо ли менять текущий целевой этаж
+            if (!floorsQueue.isEmpty() && !isDoorOpened()) {
 
                 // проверка есть ли на пути следования к вызываемому этажу дополнительные этажи для остановки
                 if (direction == MovementDirection.UP) {
@@ -91,9 +91,9 @@ public class Elevator {
                 if (destination == -1) {
                     direction = MovementDirection.IDLE;
 
-                    int dest1 = getDestination(1, currentFloor, MinMax.MAX);
-                    int dest2 = getDestination(currentFloor, building.getFloors(), MinMax.MIN);
-                    destination = Math.max(dest1, dest2);
+                    int maxDest = getDestination(1, currentFloor, MinMax.MAX);
+                    int minDest = getDestination(currentFloor, building.getFloors(), MinMax.MIN);
+                    destination = Math.max(maxDest, minDest);
                 }
             }
 
@@ -144,14 +144,16 @@ public class Elevator {
     }
 
     private int getDestination(int from, int to, MinMax val) {
+
         synchronized (floorsQueue) {
             IntStream intStream = floorsQueue
                     .stream()
-                    .filter(x -> x > from && x < to)
+                    .filter(x -> x >= from && x <= to)
                     .mapToInt(x -> x);
 
             return val.equals(MinMax.MIN) ? intStream.min().orElse(-1) : intStream.max().orElse(-1);
         }
+
     }
 
     public void moveTo(int floor) {
